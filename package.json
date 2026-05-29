@@ -1,7 +1,4 @@
 {
   "name": "tasador-vehiculos",
-  "version": "1.0.0",
-  "dependencies": {
-    "node-fetch": "^3.3.2"
-  }
+  "version": "1.0.0"
 }
