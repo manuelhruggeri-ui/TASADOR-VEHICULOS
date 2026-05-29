@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#0f1117">
+  <meta name="description" content="Tasador de vehículos usados — MercadoLibre Argentina con dólar blue en tiempo real">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tasador">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <title>Tasador Vehículos</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --bg2: #181b24;
+      --bg3: #1f2330;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --text: #f0f2f8;
+      --text2: #8b90a0;
+      --text3: #555b6e;
+      --green: #00e5a0;
+      --green-dim: rgba(0,229,160,0.12);
+      --amber: #f5a623;
+      --amber-dim: rgba(245,166,35,0.12);
+      --red: #ff5c5c;
+      --red-dim: rgba(255,92,92,0.1);
+      --blue: #4d9fff;
+      --blue-dim: rgba(77,159,255,0.1);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    /* HEADER */
+    .header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,17,23,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 0.5px solid var(--border);
+      padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-brand { display: flex; align-items: center; gap: 10px; }
+    .header-icon {
+      width: 34px; height: 34px; border-radius: 9px;
+      background: var(--green-dim); border: 0.5px solid rgba(0,229,160,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+    }
+    .header-title { font-size: 16px; font-weight: 500; color: var(--text); }
+    .header-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+    /* DOLAR BAR */
+    .dolar-bar {
+      background: var(--bg2);
+      border-bottom: 0.5px solid var(--border);
+      padding: 10px 20px;
+      display: flex; align-items: center; gap: 6px;
+      flex-wrap: wrap;
+      font-size: 12px;
+    }
+    .dolar-icon { color: var(--green); font-size: 14px; margin-right: 2px; }
+    .d-label { color: var(--text3); }
+    .d-val { font-family: 'DM Mono', monospace; color: var(--text); font-weight: 500; font-size: 12px; }
+    .d-sep { color: var(--border2); margin: 0 2px; }
+    .d-pill {
+      background: var(--green-dim);
+      border: 0.5px solid rgba(0,229,160,0.3);
+      color: var(--green);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px; font-weight: 500;
+      padding: 2px 9px; border-radius: 20px;
+      margin-left: 4px;
+    }
+    .d-loading { color: var(--text3); font-style: italic; }
+
+    /* MAIN CONTENT */
+    .main { max-width: 600px; margin: 0 auto; padding: 20px 16px 40px; }
+
+    /* FORM SECTION */
+    .form-section {
+      background: var(--bg2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+    .section-label {
+      font-size: 10px; font-weight: 500;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--text3); margin-bottom: 12px;
+    }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label {
+      font-size: 11px; font-weight: 500;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: var(--text2);
+    }
+    .field input, .field select {
+      background: var(--bg3);
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 9px 12px;
+      width: 100%;
+      outline: none;
+      transition: border-color .15s;
+      -webkit-appearance: none;
+    }
+    .field input::placeholder { color: var(--text3); }
+    .field input:focus, .field select:focus { border-color: var(--green); }
+    .field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555b6e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+    .field select option { background: #1f2330; }
+    .km-row { display: grid; grid-template-columns: 1fr 16px 1fr; gap: 8px; align-items: end; }
+    .km-sep { text-align: center; color: var(--text3); padding-bottom: 10px; font-size: 14px; }
+    .field-hint { font-size: 11px; color: var(--text3); margin-top: 2px; line-height: 1.4; }
+
+    /* BTN */
+    .btn-buscar {
+      width: 100%;
+      background: var(--green);
+      color: #0a0e14;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px; font-weight: 500;
+      padding: 13px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity .15s, transform .1s;
+      margin-top: 6px;
+    }
+    .btn-buscar:active { transform: scale(.98); opacity: .9; }
+    .btn-buscar:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* LOADER */
+    .loader {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      padding: 40px 20px; text-align: center;
+    }
+    .loader-ring {
+      width: 36px; height: 36px;
+      border: 2px solid var(--border2);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader p { color: var(--text2); font-size: 13px; }
+
+    /* RESULTS */
+    .results { margin-top: 16px; display: none; }
+    .results.show { display: block; }
+    .result-header {
+      font-size: 12px; color: var(--text2);
+      margin-bottom: 12px; line-height: 1.6;
+    }
+    .result-header strong { color: var(--text); font-weight: 500; }
+    .excl-note { color: var(--text3); font-size: 11px; }
+
+    /* PRICE CARDS */
+    .price-section-label {
+      font-size: 10px; font-weight: 500;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--text3); margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .price-section-label::before { content: ''; display: block; width: 3px; height: 12px; background: var(--green); border-radius: 2px; }
+    .perm-label::before { background: var(--amber); }
+    .price-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .price-card {
+      background: var(--bg2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      text-align: center;
+    }
+    .pc-tag { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 6px; }
+    .pc-main { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+    .pc-cross { font-size: 11px; color: var(--text2); margin-bottom: 3px; }
+    .pc-detail { font-size: 10px; color: var(--text3); }
+    .perm-card { background: rgba(245,166,35,0.05); border-color: rgba(245,166,35,0.2); }
+    .perm-card .pc-main { color: var(--amber); }
+
+    /* DISTRIBUCIÓN */
+    .dist-box {
+      background: var(--bg2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .dist-head { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); margin-bottom: 12px; }
+    .dist-currency { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin: 10px 0 8px; }
+    .dist-row { display: grid; grid-template-columns: 130px 1fr 28px; gap: 8px; align-items: center; margin-bottom: 7px; }
+    .dist-row:last-child { margin-bottom: 0; }
+    .d-price { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); }
+    .d-bar-wrap { background: var(--border); border-radius: 3px; height: 8px; overflow: hidden; }
+    .d-bar { height: 8px; border-radius: 3px; background: var(--text3); transition: width .4s ease; }
+    .d-bar.top { background: var(--green); }
+    .d-cnt { font-size: 10px; color: var(--text2); text-align: right; }
+    .freq-badge {
+      display: inline-block; font-size: 9px;
+      background: var(--green-dim); color: var(--green);
+      border: 0.5px solid rgba(0,229,160,.3);
+      padding: 1px 5px; border-radius: 20px;
+      margin-left: 4px; vertical-align: 1px; font-weight: 500;
+    }
+
+    /* STATS */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+    .stat-card {
+      background: var(--bg2); border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px;
+      text-align: center;
+    }
+    .s-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 4px; }
+    .s-val { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--text); }
+
+    /* LISTINGS */
+    .listings {
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .l-head {
+      display: grid; grid-template-columns: 1fr auto;
+      padding: 8px 14px;
+      background: var(--bg3);
+      border-bottom: 0.5px solid var(--border);
+      font-size: 10px; font-weight: 500;
+      text-transform: uppercase; letter-spacing: .06em; color: var(--text3);
+    }
+    .l-item {
+      display: grid; grid-template-columns: 1fr auto;
+      align-items: center; gap: 12px;
+      padding: 10px 14px;
+      border-bottom: 0.5px solid var(--border);
+      text-decoration: none;
+      transition: background .12s;
+    }
+    .l-item:last-child { border-bottom: none; }
+    .l-item:active { background: var(--bg3); }
+    .l-title {
+      font-size: 12px; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 240px; margin-bottom: 2px;
+    }
+    .l-meta { font-size: 10px; color: var(--text3); }
+    .l-price-main { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; color: var(--text); text-align: right; }
+    .l-price-sec { font-size: 10px; color: var(--text2); text-align: right; }
+    .l-more { padding: 9px 14px; font-size: 11px; color: var(--text3); background: var(--bg3); }
+
+    /* ERROR */
+    .err-box {
+      background: var(--red-dim); border: 0.5px solid rgba(255,92,92,.3);
+      border-radius: var(--radius); padding: 12px 16px;
+      font-size: 13px; color: var(--red); line-height: 1.5;
+    }
+
+    /* FOOTER */
+    .footer { text-align: center; font-size: 11px; color: var(--text3); padding: 20px 16px; line-height: 1.6; }
+
+    /* MOBILE ADJUSTMENTS */
+    @media (max-width: 420px) {
+      .grid2 { grid-template-columns: 1fr; }
+      .grid3 { grid-template-columns: 1fr 1fr; }
+      .price-duo { grid-template-columns: 1fr; }
+      .perm-duo { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .pc-main { font-size: 17px; }
+      .dist-row { grid-template-columns: 110px 1fr 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-brand">
+      <div class="header-icon">🚗</div>
+      <div>
+        <div class="header-title">Tasador de vehículos</div>
+        <div class="header-sub">MercadoLibre Argentina · Solo usados</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="dolar-bar" id="dbar">
+    <span class="dolar-icon">$</span>
+    <span id="dload" class="d-loading">Consultando dólar blue...</span>
+    <div id="dinfo" style="display:none; display:flex; flex-wrap:wrap; gap:4px 10px; align-items:center;">
+      <span class="d-label">Compra:</span><span class="d-val" id="dcompra">—</span>
+      <span class="d-sep">·</span>
+      <span class="d-label">Venta:</span><span class="d-val" id="dventa">—</span>
+      <span class="d-sep">·</span>
+      <span class="d-label">Referencia:</span><span class="d-pill" id="dref">$—</span>
+    </div>
+  </div>
+
+  <main class="main">
+
+    <!-- VEHÍCULO -->
+    <div class="form-section">
+      <div class="section-label">🔍 Datos del vehículo</div>
+      <div class="grid2" style="margin-bottom:10px;">
+        <div class="field"><label>Marca *</label><input type="text" id="marca" placeholder="Toyota" autocomplete="off"></div>
+        <div class="field"><label>Modelo *</label><input type="text" id="modelo" placeholder="Corolla" autocomplete="off"></div>
+      </div>
+      <div class="grid2" style="margin-bottom:10px;">
+        <div class="field"><label>Versión</label><input type="text" id="version" placeholder="XEI, SE-G..." autocomplete="off"></div>
+        <div class="field"><label>Año</label><input type="number" id="anio" placeholder="2020" min="1990" max="2026"></div>
+      </div>
+      <div class="km-row" style="margin-bottom:4px;">
+        <div class="field"><label>Km desde</label><input type="number" id="km_min" placeholder="140000" min="0" step="1000"></div>
+        <div class="km-sep">—</div>
+        <div class="field"><label>Km hasta</label><input type="number" id="km_max" placeholder="160000" min="0" step="1000"></div>
+      </div>
+      <p class="field-hint">Dejá vacío si no querés filtrar por kilómetros.</p>
+    </div>
+
+    <!-- FILTROS EXTRA -->
+    <div class="form-section">
+      <div class="section-label">⚙️ Filtros adicionales</div>
+      <div class="grid3">
+        <div class="field">
+          <label>Transmisión</label>
+          <select id="trans">
+            <option value="">Cualquiera</option>
+            <option value="manual">Manual</option>
+            <option value="automatica">Automática</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tracción</label>
+          <select id="trac">
+            <option value="">Cualquiera</option>
+            <option value="4x2">4×2</option>
+            <option value="4x4">4×4</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Resultados</label>
+          <select id="cant">
+            <option value="20">20 pub.</option>
+            <option value="40" selected>40 pub.</option>
+            <option value="60">60 pub.</option>
+          </select>
+        </div>
+      </div>
+      <p class="field-hint" style="margin-top:8px;">Solo se analizan vehículos usados. Se excluyen anticipos/señas automáticamente.</p>
+    </div>
+
+    <button class="btn-buscar" id="btnBuscar" onclick="buscar()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Calcular precio de mercado
+    </button>
+
+    <div class="results" id="results"></div>
+
+    <div class="footer">
+      Datos en tiempo real de MercadoLibre Argentina.<br>
+      Dólar blue: punto medio compra/venta. Permuta = promedio − 20%.<br>
+      Solo vehículos usados. Precios orientativos.
+    </div>
+
+  </main>
+
+  <script>
+    let dolarRef = null;
+
+    // FORMAT
+    function fN(n){ return new Intl.NumberFormat('es-AR').format(Math.round(n)); }
+    function fARS(n){ return '$\u202f' + fN(n); }
+    function fUSD(n){ return 'USD\u202f' + new Intl.NumberFormat('es-AR', {maximumFractionDigits:0}).format(Math.round(n)); }
+    function med(arr){ if(!arr.length) return null; const s=[...arr].sort((a,b)=>a-b), m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; }
+    function grup(arr, cur){ const step=cur==='USD'?500:500000, map={}; arr.forEach(p=>{const k=Math.round(p/step)*step; map[k]=(map[k]||0)+1;}); return Object.entries(map).map(([k,v])=>({p:+k,c:v})).sort((a,b)=>b.c-a.c||a.p-b.p); }
+
+    // DÓLAR
+    async function fetchDolar(){
+      try {
+        const r = await fetch('/.netlify/functions/dolar');
+        if(!r.ok) throw new Error();
+        const d = await r.json();
+        dolarRef = (d.compra + d.venta) / 2;
+        document.getElementById('dload').style.display = 'none';
+        const di = document.getElementById('dinfo');
+        di.style.display = 'flex';
+        document.getElementById('dcompra').textContent = fARS(d.compra);
+        document.getElementById('dventa').textContent = fARS(d.venta);
+        document.getElementById('dref').textContent = fARS(dolarRef);
+      } catch(e) {
+        document.getElementById('dload').textContent = 'No disponible';
+      }
+    }
+
+    // MAIN SEARCH
+    async function buscar(){
+      const marca = document.getElementById('marca').value.trim();
+      const modelo = document.getElementById('modelo').value.trim();
+      if(!marca || !modelo){ showErr('Ingresá al menos Marca y Modelo.'); return; }
+
+      const btn = document.getElementById('btnBuscar');
+      btn.disabled = true;
+      btn.innerHTML = '<div style="width:16px;height:16px;border:2px solid rgba(0,0,0,.3);border-top-color:#0a0e14;border-radius:50%;animation:spin .8s linear infinite;"></div> Buscando...';
+
+      const res = document.getElementById('results');
+      res.className = 'results show';
+      res.innerHTML = '<div class="loader"><div class="loader-ring"></div><p>Consultando MercadoLibre...</p></div>';
+
+      const version = document.getElementById('version').value.trim();
+      const anio = document.getElementById('anio').value.trim();
+      const kmMinV = document.getElementById('km_min').value.trim();
+      const kmMaxV = document.getElementById('km_max').value.trim();
+      const trans = document.getElementById('trans').value;
+      const trac = document.getElementById('trac').value;
+      const cant = document.getElementById('cant').value;
+
+      try {
+        const q = [marca, modelo, version, anio].filter(Boolean).join(' ');
+        const url = `/.netlify/functions/ml?q=${encodeURIComponent(q)}&limit=${cant}`;
+        const resp = await fetch(url);
+        if(!resp.ok) throw new Error('No se pudo conectar con MercadoLibre');
+        const data = await resp.json();
+        let items = data.results || [];
+
+        if(!items.length){ showErr(`Sin resultados para "${q}". Probá con términos más generales.`); reset(btn); return; }
+
+        // Filtrar por título
+        let fil = items.filter(i => {
+          const t = i.title.toLowerCase();
+          return t.includes(marca.toLowerCase()) && t.includes(modelo.toLowerCase());
+        });
+        if(!fil.length) fil = items;
+
+        // Transmisión
+        if(trans){
+          const c = fil.filter(i => {
+            const t = i.title.toLowerCase();
+            if(trans==='manual') return t.includes('manual');
+            if(trans==='automatica') return t.includes('autom')||t.includes('cvt')||t.includes('tiptronic')||t.includes('dsg')||t.includes('automatico')||t.includes('automática');
+            return true;
+          });
+          if(c.length >= 3) fil = c;
+        }
+
+        // Tracción
+        if(trac){
+          const c = fil.filter(i => {
+            const t = i.title.toLowerCase();
+            if(trac==='4x4') return t.includes('4x4')||t.includes('4wd')||t.includes('awd')||t.includes('quattro')||t.includes('xdrive')||t.includes('allgrip')||t.includes('4motion');
+            if(trac==='4x2') return !t.includes('4x4')&&!t.includes('4wd')&&!t.includes('awd')&&!t.includes('quattro')&&!t.includes('xdrive');
+            return true;
+          });
+          if(c.length >= 3) fil = c;
+        }
+
+        // Km range
+        const kmMin = kmMinV ? parseInt(kmMinV) : null;
+        const kmMax = kmMaxV ? parseInt(kmMaxV) : null;
+        if(kmMin !== null || kmMax !== null){
+          const c = fil.filter(i => {
+            const a = i.attributes ? i.attributes.find(x => x.id==='KILOMETERS') : null;
+            if(!a || !a.value_name) return false;
+            const km = parseInt(a.value_name);
+            if(isNaN(km)) return false;
+            if(kmMin !== null && km < kmMin) return false;
+            if(kmMax !== null && km > kmMax) return false;
+            return true;
+          });
+          if(c.length >= 3) fil = c;
+        }
+
+        // Separar monedas
+        let arsI = fil.filter(i => i.currency_id==='ARS' && i.price>0);
+        let usdI = fil.filter(i => i.currency_id==='USD' && i.price>0);
+
+        // Eliminar anticipos (< 25% mediana)
+        function filtrarAnticipos(arr){
+          if(!arr.length) return {ok:arr, excl:0};
+          const m = med(arr.map(i=>i.price));
+          const piso = m * 0.25;
+          const ok = arr.filter(i => i.price >= piso);
+          return {ok, excl: arr.length - ok.length};
+        }
+        const rARS = filtrarAnticipos(arsI);
+        const rUSD = filtrarAnticipos(usdI);
+        arsI = rARS.ok; usdI = rUSD.ok;
+        const excl = rARS.excl + rUSD.excl;
+
+        const pARS = arsI.map(i=>i.price);
+        const pUSD = usdI.map(i=>i.price);
+
+        if(!pARS.length && !pUSD.length){ showErr('No quedaron publicaciones tras los filtros. Ampliá los criterios.'); reset(btn); return; }
+
+        const promARS = pARS.length ? pARS.reduce((a,b)=>a+b,0)/pARS.length : null;
+        const promUSD = pUSD.length ? pUSD.reduce((a,b)=>a+b,0)/pUSD.length : null;
+        const minARS = pARS.length ? Math.min(...pARS) : null;
+        const maxARS = pARS.length ? Math.max(...pARS) : null;
+        const minUSD = pUSD.length ? Math.min(...pUSD) : null;
+        const maxUSD = pUSD.length ? Math.max(...pUSD) : null;
+        const medARS = med(pARS), medUSD = med(pUSD);
+        const grpARS = grup(pARS,'ARS'), grpUSD = grup(pUSD,'USD');
+        const modaARS = grpARS.length ? grpARS[0].p : null;
+        const modaUSD = grpUSD.length ? grpUSD[0].p : null;
+        const permARS = promARS ? promARS * 0.8 : null;
+        const permUSD = promUSD ? promUSD * 0.8 : null;
+        const promARSenUSD = (promARS && dolarRef) ? promARS/dolarRef : null;
+        const promUSDenARS = (promUSD && dolarRef) ? promUSD*dolarRef : null;
+        const permARSenUSD = (permARS && dolarRef) ? permARS/dolarRef : null;
+        const permUSDenARS = (permUSD && dolarRef) ? permUSD*dolarRef : null;
+
+        const titulo = [marca, modelo, version, anio].filter(Boolean).join(' ');
+        const filtrosTxt = [
+          (kmMinV||kmMaxV) ? `${kmMinV||'0'} — ${kmMaxV||'∞'} km` : '',
+          trans ? trans : '', trac ? trac.toUpperCase() : ''
+        ].filter(Boolean).join(' · ');
+
+        let h = '';
+
+        // Header
+        h += `<div class="result-header">
+          <strong>${titulo}</strong> · ${pARS.length+pUSD.length} publicaciones válidas
+          ${filtrosTxt ? ` · ${filtrosTxt}` : ''}
+          ${excl > 0 ? `<br><span class="excl-note">${excl} publicación/es excluida/s por precio de anticipo</span>` : ''}
+        </div>`;
+
+        // PRECIO VENTA
+        h += `<div class="price-section-label">Precio de venta · promedio</div>`;
+        h += `<div class="price-duo">`;
+        if(promARS) h += `<div class="price-card">
+          <div class="pc-tag">En pesos</div>
+          <div class="pc-main">${fARS(promARS)}</div>
+          ${promARSenUSD ? `<div class="pc-cross">= ${fUSD(promARSenUSD)} blue</div>` : ''}
+          <div class="pc-detail">Moda: ${fARS(modaARS)} · Mediana: ${fARS(medARS)}</div>
+        </div>`;
+        if(promUSD) h += `<div class="price-card">
+          <div class="pc-tag">En dólares</div>
+          <div class="pc-main">${fUSD(promUSD)}</div>
+          ${promUSDenARS ? `<div class="pc-cross">= ${fARS(promUSDenARS)} blue</div>` : ''}
+          <div class="pc-detail">Moda: ${fUSD(modaUSD)} · Mediana: ${fUSD(medUSD)}</div>
+        </div>`;
+        h += `</div>`;
+
+        // PERMUTA
+        if(permARS || permUSD){
+          h += `<div class="price-section-label perm-label">Valor de permuta · promedio − 20%</div>`;
+          h += `<div class="price-duo">`;
+          if(permARS) h += `<div class="price-card perm-card">
+            <div class="pc-tag">Permuta en pesos</div>
+            <div class="pc-main">${fARS(permARS)}</div>
+            ${permARSenUSD ? `<div class="pc-cross">= ${fUSD(permARSenUSD)} blue</div>` : ''}
+          </div>`;
+          if(permUSD) h += `<div class="price-card perm-card">
+            <div class="pc-tag">Permuta en dólares</div>
+            <div class="pc-main">${fUSD(permUSD)}</div>
+            ${permUSDenARS ? `<div class="pc-cross">= ${fARS(permUSDenARS)} blue</div>` : ''}
+          </div>`;
+          h += `</div>`;
+        }
+
+        // DISTRIBUCIÓN
+        if(grpARS.length > 1 || grpUSD.length > 1){
+          h += `<div class="dist-box">
+            <div class="dist-head">Distribución de precios</div>`;
+          if(grpARS.length > 1){
+            h += `<div class="dist-currency">En pesos</div>`;
+            const mx = Math.max(...grpARS.map(g=>g.c));
+            grpARS.slice(0,6).forEach(g => {
+              const top = g.p === modaARS;
+              h += `<div class="dist-row">
+                <span class="d-price">${fARS(g.p)}${top?'<span class="freq-badge">frecuente</span>':''}</span>
+                <div class="d-bar-wrap"><div class="d-bar${top?' top':''}" style="width:${Math.round(g.c/mx*100)}%"></div></div>
+                <span class="d-cnt">${g.c}</span>
+              </div>`;
+            });
+          }
+          if(grpUSD.length > 1){
+            h += `<div class="dist-currency" style="margin-top:12px;">En dólares</div>`;
+            const mx = Math.max(...grpUSD.map(g=>g.c));
+            grpUSD.slice(0,6).forEach(g => {
+              const top = g.p === modaUSD;
+              h += `<div class="dist-row">
+                <span class="d-price">${fUSD(g.p)}${top?'<span class="freq-badge">frecuente</span>':''}</span>
+                <div class="d-bar-wrap"><div class="d-bar${top?' top':''}" style="width:${Math.round(g.c/mx*100)}%"></div></div>
+                <span class="d-cnt">${g.c}</span>
+              </div>`;
+            });
+          }
+          h += `</div>`;
+        }
+
+        // STATS
+        const sc = [];
+        if(minARS) sc.push(`<div class="stat-card"><div class="s-lbl">Mín ARS</div><div class="s-val">${fARS(minARS)}</div></div>`);
+        if(maxARS) sc.push(`<div class="stat-card"><div class="s-lbl">Máx ARS</div><div class="s-val">${fARS(maxARS)}</div></div>`);
+        if(minUSD && maxUSD) sc.push(`<div class="stat-card"><div class="s-lbl">Rango USD</div><div class="s-val">${fUSD(minUSD)}–${fUSD(maxUSD)}</div></div>`);
+        if(sc.length) h += `<div class="stats-row">${sc.join('')}</div>`;
+
+        // LISTADO
+        const todos = [...arsI.map(x=>({...x,cur:'ARS'})), ...usdI.map(x=>({...x,cur:'USD'}))].sort((a,b)=>a.price-b.price);
+        if(todos.length){
+          h += `<div class="listings">
+            <div class="l-head"><span>Publicación</span><span>Precio</span></div>`;
+          todos.slice(0,15).forEach(item => {
+            const isARS = item.cur==='ARS';
+            const kma = item.attributes ? item.attributes.find(a=>a.id==='KILOMETERS') : null;
+            const yra = item.attributes ? item.attributes.find(a=>a.id==='VEHICLE_YEAR') : null;
+            const kmS = kma&&kma.value_name ? fN(parseInt(kma.value_name))+' km' : '';
+            const yrS = yra&&yra.value_name ? yra.value_name : '';
+            const meta = [yrS, kmS].filter(Boolean).join(' · ');
+            const moda = isARS ? Math.abs(item.price-(modaARS||0))<300001 : Math.abs(item.price-(modaUSD||0))<300;
+            const sec = isARS&&dolarRef ? `≈ ${fUSD(item.price/dolarRef)}` : (!isARS&&dolarRef ? `≈ ${fARS(item.price*dolarRef)}` : '');
+            h += `<a class="l-item" href="${item.permalink}" target="_blank" rel="noopener">
+              <div style="min-width:0;">
+                <div class="l-title">${item.title}${moda?'<span class="freq-badge">frecuente</span>':''}</div>
+                ${meta ? `<div class="l-meta">${meta}</div>` : ''}
+              </div>
+              <div>
+                <div class="l-price-main">${isARS?fARS(item.price):fUSD(item.price)}</div>
+                ${sec ? `<div class="l-price-sec">${sec}</div>` : ''}
+              </div>
+            </a>`;
+          });
+          if(todos.length > 15) h += `<div class="l-more">+ ${todos.length-15} publicaciones más incluidas en el cálculo</div>`;
+          h += `</div>`;
+        }
+
+        res.innerHTML = h;
+        res.scrollIntoView({behavior:'smooth', block:'start'});
+
+      } catch(err) {
+        showErr('Error: ' + err.message + '. Verificá tu conexión e intentá de nuevo.');
+      }
+      reset(btn);
+    }
+
+    function showErr(msg){
+      const r = document.getElementById('results');
+      r.className = 'results show';
+      r.innerHTML = `<div class="err-box">⚠️ ${msg}</div>`;
+    }
+    function reset(btn){
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Calcular precio de mercado';
+    }
+
+    document.querySelectorAll('input').forEach(i => i.addEventListener('keydown', e => { if(e.key==='Enter') buscar(); }));
+
+    // PWA Service Worker
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
+    }
+
+    fetchDolar();
+  </script>
+</body>
+</html>
