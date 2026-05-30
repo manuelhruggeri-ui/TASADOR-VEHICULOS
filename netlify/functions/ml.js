@@ -13,16 +13,18 @@ exports.handler = async (event) => {
       body: `grant_type=client_credentials&client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}`
     });
     const tokenData = await tokenResp.json();
+    const token = tokenData.access_token;
 
-    // Devolver todo el diagnóstico
-    return { 
-      statusCode: 200, 
-      headers, 
-      body: JSON.stringify({ 
-        token_response: tokenData,
-        tiene_token: !!tokenData.access_token
-      }) 
-    };
+    const params = event.queryStringParameters || {};
+    const q = params.q || '';
+    const limit = params.limit || '40';
+    const url = `https://api.mercadolibre.com/sites/MLA/search?q=${encodeURIComponent(q)}&limit=${limit}&condition=used`;
+
+    const resp = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+    });
+    const text = await resp.text();
+    return { statusCode: resp.status, headers, body: text };
   } catch (err) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
