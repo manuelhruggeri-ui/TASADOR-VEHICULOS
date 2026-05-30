@@ -18,10 +18,14 @@ exports.handler = async (event) => {
     const params = event.queryStringParameters || {};
     const q = params.q || '';
     const limit = params.limit || '40';
-    const url = `https://api.mercadolibre.com/sites/MLA/search?q=${encodeURIComponent(q)}&limit=${limit}&condition=used`;
+    const url = `https://api.mercadolibre.com/sites/MLA/search?q=${encodeURIComponent(q)}&limit=${limit}&condition=used&site_id=MLA`;
 
     const resp = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+        'X-Format-New': 'true'
+      }
     });
     const text = await resp.text();
     return { statusCode: resp.status, headers, body: text };
